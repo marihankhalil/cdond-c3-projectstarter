@@ -209,7 +209,7 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints: ["32:17:77:28:64:55:58:d1:8d:db:9a:24:34:82:0b:53"]
+          fingerprints: ["e2:cf:cc:d4:e0:4c:35:cc:a9:b4:67:cd:35:3f:3d:54"]
       - attach_workspace:
           at: ~/
       - run:
@@ -230,7 +230,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm install
+            npm install 
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration status to kvdb.io
@@ -285,7 +285,7 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["32:17:77:28:64:55:58:d1:8d:db:9a:24:34:82:0b:53"]
+          fingerprints: ["e2:cf:cc:d4:e0:4c:35:cc:a9:b4:67:cd:35:3f:3d:54"]
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -378,30 +378,7 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-  cleanup:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - install_awscli
-      - install_nodejs
-      - run:
-          name: Remove old stacks and files
-          command: |
-            export STACKS=($(aws cloudformation list-stacks \
-                --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
-
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/old_workflow_id)
-            echo Old Workflow ID: $OldWorkflowID 
-
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-            then
-              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
-            fi
+  
 
 workflows:
   default:
@@ -433,5 +410,4 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      
